@@ -1,0 +1,13 @@
+DirectoryIndex index.html
+ErrorDocument 404 /404.html
+
+# Allow PHP files
+<FilesMatch "\.php$">
+  SetHandler application/x-httpd-php
+</FilesMatch>
+
+# Protect sensitive files
+<FilesMatch "^(config|db|gemini)\.php$">
+  Order Deny,Allow
+  Deny from all
+</FilesMatch>

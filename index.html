@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Study Assistant — Your Intelligent Learning Companion</title>
+  <link rel="stylesheet" href="assets/css/style.css"/>
+</head>
+<body>
+<div id="navbar"></div>
+
+<main>
+  <div id="mainContent"></div>
+</main>
+
+<div id="footer"></div>
+<script src="assets/js/app.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  renderNavbar('index.html');
+  renderFooter();
+
+  const user    = getUser();
+  const content = document.getElementById('mainContent');
+
+  if (user) {
+    content.innerHTML = `
+      <div class="section" style="display:flex;justify-content:center;align-items:center;min-height:60vh">
+        <div class="welcome-card">
+          <h2>Welcome back, ${escapeHtml(user.name.split(' ')[0])}!</h2>
+          <p style="color:#6b7280;font-size:1.05rem;margin-bottom:16px">You're ready to learn something amazing today.</p>
+          <div class="badge">Account Active</div>
+          <p class="meta" style="margin-top:12px">Logged in as: <strong>${escapeHtml(user.email)}</strong></p>
+          <a href="study-tools.html" class="btn btn-gradient btn-md" style="margin-top:24px;display:inline-flex">Go to Study Tools →</a>
+        </div>
+      </div>`;
+  } else {
+    content.innerHTML = `
+      <section class="hero hero-large" style="flex:1;display:flex;flex-direction:column;justify-content:center">
+        <div class="container-narrow">
+          <h1>Your Intelligent Learning Companion</h1>
+          <p>Master any subject with AI-powered personalized learning — Notes, Quizzes & Chat</p>
+          <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
+            <button class="btn btn-lg btn-white" id="ctaStart">Get Started Free</button>
+            <a href="study-tools.html" class="btn btn-lg btn-outline-white">Try Study Tools</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-muted">
+        <div class="container">
+          <h2>Why AI Study Assistant?</h2>
+          <div class="grid grid-3">
+            <div class="card card-center card-hover">
+              <div style="font-size:2.5rem;margin-bottom:12px">📝</div>
+              <h3>Smart Notes</h3>
+              <p>Paste any material and get an instant summary, key points, and structured notes.</p>
+            </div>
+            <div class="card card-center card-hover">
+              <div style="font-size:2.5rem;margin-bottom:12px">🧩</div>
+              <h3>Quiz Generator</h3>
+              <p>Generate custom multiple-choice quizzes on any topic to test your knowledge.</p>
+            </div>
+            <div class="card card-center card-hover">
+              <div style="font-size:2.5rem;margin-bottom:12px">💬</div>
+              <h3>AI Chat Tutor</h3>
+              <p>Ask anything and get detailed, easy-to-understand answers instantly.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="hero">
+        <div class="container-narrow">
+          <h2 style="color:#fff;font-size:clamp(1.75rem,3vw,2.5rem);font-weight:700;margin-bottom:16px">Ready to Study Smarter?</h2>
+          <p>Join thousands of students using AI to ace their exams.</p>
+          <button class="btn btn-lg btn-white" id="ctaBottom">Create Free Account</button>
+        </div>
+      </section>`;
+
+    document.getElementById('ctaStart')?.addEventListener('click', () => openAuthModal('signup'));
+    document.getElementById('ctaBottom')?.addEventListener('click', () => openAuthModal('signup'));
+  }
+});
+</script>
+</body>
+</html>

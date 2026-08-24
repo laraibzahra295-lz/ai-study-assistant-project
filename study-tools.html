@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Study Tools — AI Study Assistant</title>
+  <link rel="stylesheet" href="assets/css/style.css"/>
+</head>
+<body>
+<div id="navbar"></div>
+
+<main>
+  <section class="hero">
+    <div class="container-narrow">
+      <h1>Study Tools</h1>
+      <p>AI-powered Notes Generator, Quiz Creator &amp; Chat Assistant</p>
+    </div>
+  </section>
+
+  <section class="section-muted">
+    <div class="container">
+      <div class="tools-grid">
+
+        <!-- ===== NOTES ===== -->
+        <div class="tool-card">
+          <h3>📝 Notes Generator</h3>
+          <p class="help">Paste your study material and get a summary, key points, and detailed notes.</p>
+          <textarea id="notesInput" class="textarea" rows="6" placeholder="Paste your study material here..."></textarea>
+          <button id="genNotesBtn" class="btn btn-gradient full" style="margin-top:12px">Generate Notes</button>
+          <div id="notesOutput"></div>
+        </div>
+
+        <!-- ===== QUIZ ===== -->
+        <div class="tool-card">
+          <h3>🧩 Quiz Generator</h3>
+          <p class="help">Enter a topic to generate a multiple-choice quiz.</p>
+          <input id="quizTopic" class="input" placeholder="Topic (e.g. Photosynthesis)" style="margin-bottom:10px"/>
+          <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
+            <label style="font-size:.9rem;font-weight:600;white-space:nowrap">Questions:</label>
+            <input id="quizCount" type="number" min="1" max="20" value="5" class="input" style="width:80px"/>
+          </div>
+          <button id="genQuizBtn" class="btn btn-gradient full">Generate Quiz</button>
+          <div id="quizOutput"></div>
+        </div>
+
+        <!-- ===== CHAT ===== -->
+        <div class="tool-card">
+          <h3>💬 AI Chat Assistant</h3>
+          <p class="help">Ask any study question and get instant, clear answers.</p>
+          <div class="chat-box">
+            <div class="chat-scroll" id="chatScroll"></div>
+            <form id="chatForm" class="chat-input-row">
+              <input class="input" id="chatInput" placeholder="Ask me anything..." autocomplete="off"/>
+              <button class="btn btn-primary" type="submit">Send</button>
+            </form>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+            <button class="btn btn-ghost" id="clearChatBtn" style="flex:1">Clear</button>
+            <button class="btn btn-ghost" id="copyLastBtn" style="flex:1">Copy Last</button>
+            <button class="btn btn-ghost" id="downloadBtn" style="flex:1">Download</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="footer"></div>
+<script src="assets/js/app.js"></script>
+<script>
+/* ===== INIT ===== */
+document.addEventListener('DOMContentLoaded', () => {
+  renderNavbar('study-tools.html');
+  renderFooter();
+
+  if (!requireAuth()) return;
+
+  initNotes();
+  initQuiz();
+  initChat();
+});
+
+/* ===========================
+   NOTES
+=========================== */
+function initNotes() {
+  document.getElementById('genNotesBtn').addEventListener('click', async () => {
+    const content = document.getElementById('notesInput').value.trim();
+    if (!content) { toast('Error', 'Please paste some content first', 'destructive'); return; }
+
+    const btn = document.getElementById('genNotesBtn');
+    btn.disabled = true; btn.textContent = 'Generating...';
+
+    try {
+      const res  = await fetch('./api/notes.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to generate notes');
+
+      document.getElementById('notesOutput').innerHTML = `
+        <div class="output-box">
+          <h4>Summary</h4>
+          <p class="summary">${escapeHtml(data.summary || '')}</p>
+          <h4 style="margin-top:14px">Key Points</h4>
+          <ul>${(data.keyPoints || []).map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul>
+          <h4 style="margin-top:14px">Detailed Notes</h4>
+          <p class="notes">${escapeHtml(data.notes || '')}</p>
+        </div>`;
+
+    } catch (err) {
+      toast('Error', err.message, 'destructive');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Generate Notes';
+    }
+  });
+}
+
+/* ===========================
+   QUIZ
+=========================== */
+let currentQuiz = null, userAnswers = {}, quizChecked = false;
+
+function initQuiz() {
+  document.getElementById('genQuizBtn').addEventListener('click', async () => {
+    const topic = document.getElementById('quizTopic').value.trim();
+    const count = parseInt(document.getElementById('quizCount').value) || 5;
+    if (!topic) { toast('Error', 'Please enter a topic', 'destructive'); return; }
+
+    const btn = document.getElementById('genQuizBtn');
+    btn.disabled = true; btn.textContent = 'Generating...';
+
+    try {
+      const res  = await fetch('./api/quiz.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic, count }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to generate quiz');
+
+      currentQuiz  = data;
+      userAnswers  = {};
+      quizChecked  = false;
+      renderQuiz();
+
+    } catch (err) {
+      toast('Error', err.message, 'destructive');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Generate Quiz';
+    }
+  });
+}
+
+function renderQuiz() {
+  if (!currentQuiz) return;
+  const out = document.getElementById('quizOutput');
+
+  const html = currentQuiz.questions.map((q, qi) => {
+    const opts = q.options.map((opt, oi) => {
+      let cls = 'quiz-opt';
+      if (quizChecked) {
+        if (oi === q.answerIndex)        cls += ' correct';
+        else if (userAnswers[qi] === oi) cls += ' wrong';
+        else                             cls += ' dimmed';
+      } else if (userAnswers[qi] === oi) cls += ' selected';
+
+      return `<div class="${cls}" data-q="${qi}" data-o="${oi}">${String.fromCharCode(65+oi)}. ${escapeHtml(opt)}</div>`;
+    }).join('');
+
+    const explain = quizChecked && q.explanation
+      ? `<div class="quiz-explain">💡 ${escapeHtml(q.explanation)}</div>` : '';
+
+    return `<div class="quiz-q"><p class="q-text">${qi+1}. ${escapeHtml(q.question)}</p>${opts}${explain}</div>`;
+  }).join('');
+
+  const answered = Object.keys(userAnswers).length;
+  const score    = quizChecked
+    ? currentQuiz.questions.filter((q,i) => userAnswers[i] === q.answerIndex).length : 0;
+
+  out.innerHTML = `
+    <div class="output-box">
+      <strong>Topic: ${escapeHtml(currentQuiz.topic)}</strong>
+      <div style="margin-top:14px">${html}</div>
+      ${quizChecked
+        ? `<div class="quiz-score">Score: ${score} / ${currentQuiz.questions.length}</div>`
+        : `<button id="checkQuizBtn" class="btn btn-dark full" style="margin-top:12px">Check Answers (${answered}/${currentQuiz.questions.length} answered)</button>`
+      }
+    </div>`;
+
+  out.querySelectorAll('.quiz-opt').forEach(el => {
+    if (quizChecked) return;
+    el.addEventListener('click', () => {
+      userAnswers[el.dataset.q] = parseInt(el.dataset.o);
+      renderQuiz();
+    });
+  });
+
+  document.getElementById('checkQuizBtn')?.addEventListener('click', () => {
+    if (Object.keys(userAnswers).length < currentQuiz.questions.length) {
+      toast('Info', 'Please answer all questions first');
+      return;
+    }
+    quizChecked = true;
+    renderQuiz();
+  });
+}
+
+/* ===========================
+   CHAT
+=========================== */
+function initChat() {
+  const chatHistory = [{ role: 'assistant', content: "Hi! I'm your AI Study Assistant. Ask me anything! 😊" }];
+  let pending = false, lastReply = '';
+
+  function renderChat() {
+    const scroll = document.getElementById('chatScroll');
+    scroll.innerHTML = chatHistory.map(m => `
+      <div class="chat-msg ${m.role}">${escapeHtml(m.content)}</div>
+    `).join('') + (pending ? '<div class="chat-msg assistant chat-typing">Typing...</div>' : '');
+    scroll.scrollTop = scroll.scrollHeight;
+  }
+  renderChat();
+
+  document.getElementById('chatForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const input = document.getElementById('chatInput');
+    const text  = input.value.trim();
+    if (!text || pending) return;
+
+    chatHistory.push({ role: 'user', content: text });
+    input.value = '';
+    pending = true;
+    renderChat();
+
+    try {
+      const res  = await fetch('./api/chat.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: chatHistory }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Chat failed');
+
+      lastReply = data.reply;
+      chatHistory.push({ role: 'assistant', content: data.reply });
+    } catch (err) {
+      chatHistory.push({ role: 'assistant', content: 'Error: ' + err.message });
+    } finally {
+      pending = false;
+      renderChat();
+    }
+  });
+
+  document.getElementById('clearChatBtn').addEventListener('click', () => {
+    chatHistory.length = 0;
+    chatHistory.push({ role: 'assistant', content: 'Chat cleared! Ask me anything 😊' });
+    lastReply = '';
+    renderChat();
+  });
+
+  document.getElementById('copyLastBtn').addEventListener('click', () => {
+    if (!lastReply) { toast('Nothing to copy'); return; }
+    navigator.clipboard.writeText(lastReply).then(() => toast('Copied!', 'Answer copied to clipboard'));
+  });
+
+  document.getElementById('downloadBtn').addEventListener('click', () => {
+    if (!lastReply) { toast('Nothing to download'); return; }
+    const a   = document.createElement('a');
+    a.href    = URL.createObjectURL(new Blob([lastReply], { type: 'text/plain' }));
+    a.download = 'ai-answer.txt';
+    a.click();
+  });
+}
+</script>
+</body>
+</html>

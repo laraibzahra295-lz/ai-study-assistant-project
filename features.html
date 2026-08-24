@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Features — AI Study Assistant</title>
+  <link rel="stylesheet" href="assets/css/style.css"/>
+</head>
+<body>
+<div id="navbar"></div>
+<main>
+  <section class="hero">
+    <div class="container-narrow">
+      <h1>Powerful Features</h1>
+      <p>Everything you need to master any subject — powered by AI</p>
+    </div>
+  </section>
+
+  <section class="section-muted">
+    <div class="container">
+      <h2>Why Choose AI Study Assistant?</h2>
+      <div class="grid grid-3" id="featuresGrid"></div>
+    </div>
+  </section>
+
+  <section class="section-white">
+    <div class="container">
+      <h2>More Powerful Tools</h2>
+      <div class="grid grid-3" id="toolsGrid"></div>
+    </div>
+  </section>
+
+  <section class="hero">
+    <div class="container-narrow">
+      <h2 style="color:#fff;margin-bottom:16px;font-size:clamp(1.75rem,3vw,2.5rem);font-weight:700">Ready to Start Learning Smarter?</h2>
+      <p>Explore your AI tools and master your subjects today.</p>
+      <a href="study-tools.html" class="btn btn-lg btn-white">Try Study Tools</a>
+    </div>
+  </section>
+</main>
+<div id="footer"></div>
+<script src="assets/js/app.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  renderNavbar('features.html');
+  renderFooter();
+
+  const features = [
+    { icon: '📚', title: 'Smart Notes',       desc: 'AI automatically organizes and summarizes your notes, highlighting key concepts and creating study guides.' },
+    { icon: '❓', title: 'Instant Q&A',        desc: 'Ask any question and get detailed, easy-to-understand explanations backed by verified sources.' },
+    { icon: '🧠', title: 'Adaptive Learning',  desc: 'Our AI learns your pace and style, adjusting difficulty and recommendations to maximize learning.' },
+    { icon: '📊', title: 'Progress Tracking',  desc: 'Detailed analytics show your improvement, weak areas, and personalized recommendations.' },
+    { icon: '🎯', title: 'Goal Setting',        desc: 'Set academic goals and receive motivational reminders to stay on track throughout your journey.' },
+    { icon: '👥', title: 'Study Groups',        desc: 'Connect with peers, share notes, collaborate on projects, and learn together.' },
+  ];
+  const tools = [
+    { icon: '🧮', title: 'Math Solver',       desc: 'Step-by-step solutions for algebra, calculus, geometry and more.' },
+    { icon: '✍️', title: 'Essay Writer',       desc: 'AI-assisted essay writing with structure, grammar, and style suggestions.' },
+    { icon: '🌍', title: 'Language Learning', desc: 'Practice vocabulary, grammar, and conversation in 50+ languages.' },
+    { icon: '🔬', title: 'Science Labs',      desc: 'Virtual experiments and simulations for physics, chemistry, and biology.' },
+    { icon: '📅', title: 'Study Planner',     desc: 'AI-generated study schedules based on your exams and availability.' },
+    { icon: '🏆', title: 'Achievements',      desc: 'Earn badges and rewards as you hit milestones and learning goals.' },
+  ];
+
+  document.getElementById('featuresGrid').innerHTML = features.map(f => `
+    <div class="card card-center card-hover">
+      <div style="font-size:2rem;margin-bottom:10px">${f.icon}</div>
+      <h3>${f.title}</h3><p>${f.desc}</p>
+    </div>`).join('');
+
+  document.getElementById('toolsGrid').innerHTML = tools.map(t => `
+    <div class="card card-center card-hover" style="background:#f9fafb">
+      <div style="font-size:1.8rem;margin-bottom:10px">${t.icon}</div>
+      <h3 style="font-size:1.05rem">${t.title}</h3>
+      <p style="font-size:.9rem">${t.desc}</p>
+    </div>`).join('');
+});
+</script>
+</body>
+</html>
