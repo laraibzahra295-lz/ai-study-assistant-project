@@ -38,7 +38,7 @@ define('DB_PASS', '');
  * =========================
  */
 
-define('GEMINI_API_KEY', 'AIzaSyBrfNvdmx-iIjnRhXbyaBVoVF4iX1KQUtI'); // <-- change this
+define('GEMINI_API_KEY', 'api key paste'); // <-- change this
 
 define('GEMINI_MODEL', 'gemini-1.5-flash');
 
